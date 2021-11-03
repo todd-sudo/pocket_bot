@@ -2,6 +2,7 @@ package telegram
 
 import (
 	"context"
+	"fmt"
 	"net/url"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
@@ -28,9 +29,12 @@ func (b *Bot) handleCommand(message *tgbotapi.Message) error {
 // handleStartCommand обрабатывает команду /start
 func (b *Bot) handleStartCommand(message *tgbotapi.Message) error {
 	_, err := b.getAccessToken(message.Chat.ID)
+
 	if err != nil {
+		fmt.Println(err)
 		return b.initAuthorizationProcess(message)
 	}
+
 	msg := tgbotapi.NewMessage(message.Chat.ID, replyAlreadyAuthorized)
 	_, err = b.bot.Send(msg)
 	return err
@@ -55,6 +59,7 @@ func (b *Bot) handleMessage(message *tgbotapi.Message) error {
 	}
 
 	accessToken, err := b.getAccessToken(message.Chat.ID)
+
 	if err != nil {
 		msg.Text = "Упс..! Ты не авторизирован, используй команду /start :)"
 		_, err = b.bot.Send(msg)

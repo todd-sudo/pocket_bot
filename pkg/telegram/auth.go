@@ -10,36 +10,35 @@ import (
 
 // initAuthorizationProcess запускает процесс авторизации
 func (b *Bot) initAuthorizationProcess(message *tgbotapi.Message) error {
-	authLink, err := b.generateAuthorizationLink(message.Chat.ID)
+	authLink, err := b.createAuthorizationLink(message.Chat.ID)
 	if err != nil {
 		return err
 	}
 
-	msg := tgbotapi.NewMessage(message.Chat.ID,
-		fmt.Sprintf(replyStartTempate, authLink))
-
+	msgText := fmt.Sprintf(replyStartTempate, authLink)
+	msg := tgbotapi.NewMessage(message.Chat.ID, msgText)
 	_, err = b.bot.Send(msg)
+
 	return err
+}
+
+func (b *Bot) createAuthorizationLink(chatID int64) (string, error) {
+	redirectUrl := b.generateRedirectLink(chatID)
+	token, err := b.pocketClient.GetRequestToken(context.Background(), b.redirectURL)
+	if err != nil {
+		return "", err
+	}
+
+	if err := b.tokenRepository.Save(chatID, token, repository.RequestTokens); err != nil {
+		return "", err
+	}
+
+	return b.pocketClient.GetAuthorizationURL(token, redirectUrl)
 }
 
 // getAccessToken получает access token
 func (b *Bot) getAccessToken(chatID int64) (string, error) {
 	return b.tokenRepository.Get(chatID, repository.AccessTokens)
-}
-
-// generateAuthorizationLink генерирует ссылку для авторизации
-func (b *Bot) generateAuthorizationLink(chatID int64) (string, error) {
-	redirectURL := b.generateRedirectLink(chatID)
-	requestToken, err := b.pocketClient.GetRequestToken(context.Background(), redirectURL)
-	if err != nil {
-		return "", err
-	}
-
-	if err := b.tokenRepository.Save(chatID, requestToken, repository.RequestTokens); err != nil {
-		return "", err
-	}
-
-	return b.pocketClient.GetAuthorizationURL(requestToken, redirectURL)
 }
 
 // generateRedirectLink генерирует ссылку для редиректа

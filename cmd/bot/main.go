@@ -20,7 +20,7 @@ func main() {
 
 	bot.Debug = false
 
-	pocketClient, err := pocket.NewClient("99472-07014b2b6f55884626dbf680")
+	pocketClient, err := pocket.NewClient("99500-61ca225bdc61e5ccda6da386")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -29,6 +29,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	defer db.Close()
 	tokenRepository := boltdb.NewTokenRepository(db)
 
 	telegramBot := telegram.NewBot(bot, pocketClient, tokenRepository, "http://localhost:8000/")
@@ -53,6 +54,7 @@ func initDB() (*bolt.DB, error) {
 	}
 
 	if err := db.Update(func(tx *bolt.Tx) error {
+
 		_, err := tx.CreateBucketIfNotExists([]byte(repository.AccessTokens))
 		if err != nil {
 			return err

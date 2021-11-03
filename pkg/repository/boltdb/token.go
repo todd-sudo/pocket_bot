@@ -27,17 +27,15 @@ func (r *TokenRepository) Get(chatID int64, bucket repository.Bucket) (string, e
 	var token string
 	err := r.db.View(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(bucket))
-		data := b.Get(intToBytes(chatID))
-		token = string(data)
+		token = string(b.Get(intToBytes(chatID)))
 		return nil
 	})
-	if err != nil {
-		return "", err
-	}
+
 	if token == "" {
-		return "", errors.New("token not found")
+		return "", errors.New("not found")
 	}
-	return token, nil
+
+	return token, err
 }
 
 func intToBytes(v int64) []byte {
